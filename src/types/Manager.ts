@@ -1,4 +1,4 @@
-import type { Developer } from "./Developer";
+import type { Developer } from "./developer-type/Developer";
 import type { User } from "./task-type/User";
 
 

@@ -1,13 +1,16 @@
 
-import { AuthProvider } from './auth/AuthContext'
+import { AuthProvider } from './context/AuthContext'
+import { TaskProvider } from './context/TaskContext';
 import Router from './router'
 
 
 function App() {
   return (
-    <AuthProvider>
-      <Router />
-    </AuthProvider>
+    <TaskProvider>
+      <AuthProvider>
+        <Router />
+      </AuthProvider>
+    </TaskProvider>
   );
 }
 

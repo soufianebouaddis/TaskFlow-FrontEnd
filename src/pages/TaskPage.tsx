@@ -1,72 +1,77 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../auth/useAuth';
-import { Plus, Users, Calendar, CheckCircle, Clock, AlertCircle, User, Mail, Code, X, ArrowRight } from 'lucide-react';
+import { useAuth } from '../context/useAuth';
+import { Plus, Users, Calendar, CheckCircle, Clock, AlertCircle, User, Mail, Code, X, ArrowRight, UserPlus, Settings } from 'lucide-react';
 import { taskService } from '../services/task/taskService';
-
+import { developerService } from '../services/developer/developerService';
+import { managerService } from '../services/manager/managerService';
+import authService from '../services/auth/authService';
+import Header from '../components/Header';
+import ProfileModal from '../components/Profile';
+import AddTaskModal from '../components/AddTaskModal';
+import AssignTaskModal from '../components/AssignTaskModal';
+import { useTaskContext } from '../context/useTask';
 
 const TaskPage = () => {
-  const { user, logout } = useAuth();
-  const [tasks, setTasks] = useState([]);
+  const { user,fetchUser , logout } = useAuth();
+  const { tasks, developers, addTask, assignTask, loadTasks, isLoading } = useTaskContext();
+
   const [showAddTask, setShowAddTask] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [showAssignTask, setShowAssignTask] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
+  const [selectedTask, setSelectedTask] = useState(null);
+
   const [newTask, setNewTask] = useState({
     taskLabel: '',
     taskState: 'TODO'
   });
 
+  const [profileData, setProfileData] = useState({
+    firstName: user?.firstName || '',
+    lastName: user?.lastName || ''
+  });
+
   useEffect(() => {
-    loadTasks();
-  }, []);
-
-  const loadTasks = async () => {
-    try {
-      setIsLoading(true);
-      const response = await taskService.tasks();
-      if (response.data.success) {
-        setTasks(response.data.data || []);
-      }
-    } catch (error) {
-      console.error('Error loading tasks:', error);
-    } finally {
-      setIsLoading(false);
+    if (user) {
+      loadTasks();
     }
-  };
-
-
+  }, [user]);
 
   const handleAddTask = async () => {
-    if (!newTask.taskLabel.trim()) {
-      return;
-    }
+    if (!newTask.taskLabel.trim()) return;
 
-    try {
-      setIsLoading(true);
-      const response = await taskService.add(newTask);
-      if (response.data.success) {
-        await loadTasks(); // Refresh tasks
-        setNewTask({ taskLabel: '', taskState: 'TODO' });
-        setShowAddTask(false);
-      }
-    } catch (error) {
-      console.error('Error adding task:', error);
-    } finally {
-      setIsLoading(false);
-    }
+    await addTask(newTask);
+    setNewTask({ taskLabel: '', taskState: 'TODO' });
+    setShowAddTask(false);
   };
 
   const handleStatusChange = async (taskId, newStatus) => {
-    try {
-      const taskToUpdate = tasks.find(task => task.id === taskId);
-      if (!taskToUpdate) return;
+    const taskToUpdate = tasks.find(task => task.id === taskId);
+    if (!taskToUpdate) return;
 
-      const updatedTask = { ...taskToUpdate, taskState: newStatus };
-      const response = await taskService.update(taskId, updatedTask);
-      
-      if (response.data.success) {
-        await loadTasks(); // Refresh tasks
-      }
+    const updatedTask = { ...taskToUpdate, taskState: newStatus };
+
+    try {
+      await taskService.update(taskId, updatedTask);
+      await loadTasks();
     } catch (error) {
       console.error('Error updating task:', error);
+    }
+  };
+
+  const handleAssignTask = async (developerId) => {
+    if (!selectedTask) return;
+    await assignTask(selectedTask.id, developerId); 
+    setShowAssignTask(false);
+    setSelectedTask(null);
+  };
+
+  const handleUpdateProfile = async () => {
+    try {
+      await authService.updateProfile(user.id, profileData);
+      await fetchUser();
+      setShowProfile(false);
+    } catch (error) {
+      console.error('Error updating profile:', error);
     }
   };
 
@@ -79,8 +84,8 @@ const TaskPage = () => {
     }
   };
 
-  const filteredTasks = user?.role === 'DEVELOPER' 
-    ? tasks.filter(task => task.assignedTo === user?.id) 
+  const filteredTasks = user?.role === 'DEVELOPER'
+    ? tasks.filter(task => task.assignedTo === user?.id)
     : tasks;
 
   const tasksByStatus = {
@@ -92,28 +97,7 @@ const TaskPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
       {/* Header */}
-      <div className="bg-white/10 backdrop-blur-xl border-b border-white/20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div>
-              <h1 className="text-3xl font-bold text-white">Task Dashboard</h1>
-              <p className="text-slate-300 mt-1">Welcome back, {user?.firstName || user?.email}</p>
-            </div>
-            <div className="flex items-center space-x-4">
-              <span className="inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-purple-300 border border-purple-500/30 backdrop-blur-sm">
-                <User className="w-4 h-4 mr-2" />
-                {user?.role}
-              </span>
-              <button
-                onClick={logout}
-                className="px-6 py-2 text-sm font-medium text-slate-300 bg-white/10 border border-white/20 rounded-xl hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all duration-200 backdrop-blur-sm"
-              >
-                Logout
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <Header user={user} onOpenProfile={() => setShowProfile(true)} onLogout={logout} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Manager View */}
@@ -128,7 +112,7 @@ const TaskPage = () => {
                   </div>
                   <div className="ml-4">
                     <p className="text-sm font-medium text-slate-300">Developers</p>
-                    <p className="text-2xl font-bold text-white">{user.developerDetails.team.length}</p>
+                    <p className="text-2xl font-bold text-white">{user.developerDetails?.team?.length || 0}</p>
                   </div>
                 </div>
               </div>
@@ -168,34 +152,36 @@ const TaskPage = () => {
             </div>
 
             {/* Developers Section */}
-            <div className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 mb-8">
-              <div className="px-6 py-4 border-b border-white/20">
-                <h2 className="text-xl font-semibold text-white">Team Members</h2>
-              </div>
-              <div className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {user.developerDetails.team.map(developer => (
-                    <div key={developer.id} className="flex items-center p-4 bg-white/5 rounded-xl border border-white/10">
-                      <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
-                        <Code className="w-6 h-6 text-white" />
+            {user.developerDetails?.team && (
+              <div className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 mb-8">
+                <div className="px-6 py-4 border-b border-white/20">
+                  <h2 className="text-xl font-semibold text-white">Team Members</h2>
+                </div>
+                <div className="p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {user.developerDetails.team.map(developer => (
+                      <div key={developer.email} className="flex items-center p-4 bg-white/5 rounded-xl border border-white/10">
+                        <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl flex items-center justify-center">
+                          <Code className="w-6 h-6 text-white" />
+                        </div>
+                        <div className="ml-4">
+                          <p className="text-sm font-medium text-white">
+                            {developer.firstName} {developer.lastName}
+                          </p>
+                          <p className="text-xs text-slate-400 flex items-center mt-1">
+                            {developer.developerType}
+                          </p>
+                          <p className="text-xs text-slate-400 flex items-center mt-1">
+                            <Mail className="w-3 h-3 mr-1" />
+                            {developer.email}
+                          </p>
+                        </div>
                       </div>
-                      <div className="ml-4">
-                        <p className="text-sm font-medium text-white">
-                          {developer.firstName} {developer.lastName}
-                        </p>
-                        <p className="text-xs text-slate-400 flex items-center mt-1">
-                          {developer.developerType}
-                        </p>
-                        <p className="text-xs text-slate-400 flex items-center mt-1">
-                          <Mail className="w-3 h-3 mr-1" />
-                          {developer.email}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Add Task Button */}
             <div className="mb-6">
@@ -230,8 +216,19 @@ const TaskPage = () => {
                   <div key={task.id} className="bg-white/5 border border-white/10 rounded-xl p-4 hover:bg-white/10 transition-all duration-200">
                     <div className="flex items-start justify-between mb-3">
                       <h4 className="text-sm font-semibold text-white flex-1">{task.taskLabel}</h4>
+                      {user?.role === 'MANAGER' && (
+                        <button
+                          onClick={() => {
+                            setSelectedTask(task);
+                            setShowAssignTask(true);
+                          }}
+                          className="ml-2 p-1 text-slate-400 hover:text-purple-400 transition-colors"
+                        >
+                          <UserPlus className="w-4 h-4" />
+                        </button>
+                      )}
                     </div>
-                    
+
                     <div className="flex items-center justify-between text-xs text-slate-400 mb-4">
                       <span className="flex items-center">
                         <Calendar className="w-3 h-3 mr-1" />
@@ -251,11 +248,10 @@ const TaskPage = () => {
                             key={newStatus}
                             onClick={() => handleStatusChange(task.id, newStatus)}
                             disabled={task.taskState === newStatus}
-                            className={`px-3 py-1 text-xs font-medium rounded-lg transition-all duration-200 ${
-                              task.taskState === newStatus
-                                ? 'bg-white/10 text-slate-500 cursor-not-allowed border border-white/20'
-                                : 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-purple-300 hover:from-purple-500/30 hover:to-pink-500/30 border border-purple-500/30'
-                            }`}
+                            className={`px-3 py-1 text-xs font-medium rounded-lg transition-all duration-200 ${task.taskState === newStatus
+                              ? 'bg-white/10 text-slate-500 cursor-not-allowed border border-white/20'
+                              : 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-purple-300 hover:from-purple-500/30 hover:to-pink-500/30 border border-purple-500/30'
+                              }`}
                           >
                             {newStatus.replace('_', ' ')}
                           </button>
@@ -277,77 +273,48 @@ const TaskPage = () => {
 
       {/* Add Task Modal */}
       {showAddTask && user?.role === 'MANAGER' && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">
-          <div className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 p-8 w-full max-w-md">
-            <div className="flex justify-between items-center mb-6">
-              <h3 className="text-xl font-semibold text-white">Add New Task</h3>
-              <button
-                onClick={() => setShowAddTask(false)}
-                className="text-slate-400 hover:text-white transition-colors"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            
-            <div className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-slate-200 mb-2">Task Label</label>
-                <input
-                  type="text"
-                  value={newTask.taskLabel}
-                  onChange={(e) => setNewTask({...newTask, taskLabel: e.target.value})}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 backdrop-blur-sm"
-                  placeholder="Enter task description"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-slate-200 mb-2">Status</label>
-                <select
-                  value={newTask.taskState}
-                  onChange={(e) => setNewTask({...newTask, taskState: e.target.value})}
-                  className="w-full px-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 backdrop-blur-sm"
-                >
-                  <option value="TODO" className="bg-slate-800">To Do</option>
-                  <option value="IN_PROGRESS" className="bg-slate-800">In Progress</option>
-                  <option value="DONE" className="bg-slate-800">Done</option>
-                </select>
-              </div>
-              
-              <div className="flex justify-end space-x-3 pt-4">
-                <button
-                  onClick={() => setShowAddTask(false)}
-                  className="px-6 py-3 text-sm font-medium text-slate-300 bg-white/10 border border-white/20 rounded-xl hover:bg-white/20 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-slate-900 transition-all duration-200"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleAddTask}
-                  disabled={isLoading || !newTask.taskLabel.trim()}
-                  className="px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 rounded-xl transition-all duration-200 flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-purple-500/25"
-                >
-                  {isLoading ? (
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  ) : (
-                    <>
-                      <span>Create Task</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </>
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <AddTaskModal
+          newTask={newTask}
+          setNewTask={setNewTask}
+          isLoading={isLoading}
+          onAddTask={handleAddTask}
+          onClose={() => setShowAddTask(false)}
+        />
+      )}
+
+      {/* Assign Task Modal */}
+      {showAssignTask && selectedTask && (
+        <AssignTaskModal
+          selectedTask={selectedTask}
+          developers={developers}
+          onAssign={handleAssignTask}
+          onClose={() => {
+            setShowAssignTask(false);
+            setSelectedTask(null);
+          }}
+          isLoading={isLoading}
+        />
+      )}
+
+
+      {/* Profile Modal */}
+      {showProfile && user && (
+        <ProfileModal
+          profileData={profileData}
+          setProfileData={setProfileData}
+          isLoading={isLoading}
+          onUpdate={handleUpdateProfile}
+          onClose={() => setShowProfile(false)}
+        />
       )}
 
       {/* Loading Overlay */}
-      {isLoading && !showAddTask && (
+      {isLoading && !showAddTask && !showAssignTask && !showProfile && (
         <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 flex items-center justify-center">
           <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20">
             <div className="flex items-center space-x-3">
               <div className="w-6 h-6 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin" />
-              <span className="text-white font-medium">Loading tasks...</span>
+              <span className="text-white font-medium">Loading...</span>
             </div>
           </div>
         </div>
