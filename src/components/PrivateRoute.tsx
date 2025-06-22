@@ -1,7 +1,21 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../auth/useAuth';
+import type { ReactNode } from 'react';
 
-export default function PrivateRoute({ children }) {
-  const { user } = useAuth();
-  return user ? children : <Navigate to="/login" />;
+interface PrivateRouteProps {
+  children: ReactNode;
+}
+
+export default function PrivateRoute({ children }: PrivateRouteProps) {
+  const { user, isLoading } = useAuth();
+
+  if (isLoading) {
+    return <div>Loading...</div>; // or your custom spinner component
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
 }

@@ -5,6 +5,7 @@ import Login from './pages/LoginPage';
 import Register from './pages/RegisterPage';
 import TaskPage from './pages/TaskPage';
 
+
 const Router = () => {
   return (
     <BrowserRouter>
