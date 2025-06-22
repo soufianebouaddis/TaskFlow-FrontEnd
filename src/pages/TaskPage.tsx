@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../context/useAuth';
-import { Plus, Users, Calendar, CheckCircle, Clock, AlertCircle, User, Mail, Code, X, ArrowRight, UserPlus, Settings } from 'lucide-react';
+import { UserPlus, Trash, Calendar, AlertCircle, Clock, CheckCircle, Plus, Users, Mail, Code, Pencil } from 'lucide-react';
 import { taskService } from '../services/task/taskService';
 import { developerService } from '../services/developer/developerService';
 import { managerService } from '../services/manager/managerService';
@@ -10,10 +10,15 @@ import ProfileModal from '../components/Profile';
 import AddTaskModal from '../components/AddTaskModal';
 import AssignTaskModal from '../components/AssignTaskModal';
 import { useTaskContext } from '../context/useTask';
+import type { Task } from '../types/task-type/Task';
+import EditTaskModal from '../components/EditTaskModal';
 
 const TaskPage = () => {
-  const { user,fetchUser , logout } = useAuth();
+  const { user, fetchUser, logout } = useAuth();
   const { tasks, developers, addTask, assignTask, loadTasks, isLoading } = useTaskContext();
+
+  const [showEditTaskModal, setShowEditTaskModal] = useState(false);
+  const [editableTask, setEditableTask] = useState<Task | null>(null);
 
   const [showAddTask, setShowAddTask] = useState(false);
   const [showAssignTask, setShowAssignTask] = useState(false);
@@ -44,10 +49,10 @@ const TaskPage = () => {
     setShowAddTask(false);
   };
 
-  const handleStatusChange = async (taskId, newStatus) => {
+  const handleStatusChange = async (taskId:number, newStatus) => {
     const taskToUpdate = tasks.find(task => task.id === taskId);
     if (!taskToUpdate) return;
-
+    
     const updatedTask = { ...taskToUpdate, taskState: newStatus };
 
     try {
@@ -60,7 +65,7 @@ const TaskPage = () => {
 
   const handleAssignTask = async (developerId) => {
     if (!selectedTask) return;
-    await assignTask(selectedTask.id, developerId); 
+    await assignTask(selectedTask.id, developerId);
     setShowAssignTask(false);
     setSelectedTask(null);
   };
@@ -75,15 +80,6 @@ const TaskPage = () => {
     }
   };
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'TODO': return <AlertCircle className="w-5 h-5 text-slate-400" />;
-      case 'IN_PROGRESS': return <Clock className="w-5 h-5 text-purple-400" />;
-      case 'DONE': return <CheckCircle className="w-5 h-5 text-green-400" />;
-      default: return <AlertCircle className="w-5 h-5 text-slate-400" />;
-    }
-  };
-
   const filteredTasks = user?.role === 'DEVELOPER'
     ? tasks.filter(task => task.assignedTo === user?.id)
     : tasks;
@@ -93,6 +89,41 @@ const TaskPage = () => {
     IN_PROGRESS: filteredTasks.filter(task => task.taskState === 'IN_PROGRESS'),
     DONE: filteredTasks.filter(task => task.taskState === 'DONE')
   };
+
+  const groupedTasks = useMemo(() => {
+    if (user?.role === 'MANAGER') {
+      return tasksByStatus;
+    }
+
+    const devTasks = user?.developerDetails?.tasks || [];
+
+    return devTasks.reduce((acc, task) => {
+      const status = task.taskState;
+      if (!acc[status]) acc[status] = [];
+      acc[status].push(task);
+      return acc;
+    }, {} as Record<string, Task[]>);
+  }, [user, tasksByStatus]);
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'TODO': return <AlertCircle className="w-5 h-5 text-slate-400" />;
+      case 'IN_PROGRESS': return <Clock className="w-5 h-5 text-purple-400" />;
+      case 'DONE': return <CheckCircle className="w-5 h-5 text-green-400" />;
+      default: return <AlertCircle className="w-5 h-5 text-slate-400" />;
+    }
+  };
+
+  const handleDeleteTask = async (taskId: number) => {
+    try {
+      await taskService.deleteTask(taskId);
+      await loadTasks();
+    } catch (error) {
+      console.error('Failed to delete task:', error);
+    }
+  };
+
+  
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
@@ -198,7 +229,7 @@ const TaskPage = () => {
 
         {/* Task Columns */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {Object.entries(tasksByStatus).map(([status, statusTasks]) => (
+          {Object.entries(groupedTasks).map(([status, statusTasks]) => (
             <div key={status} className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20">
               <div className="px-6 py-4 border-b border-white/20">
                 <div className="flex items-center justify-between">
@@ -211,21 +242,34 @@ const TaskPage = () => {
                   </span>
                 </div>
               </div>
+
               <div className="p-4 space-y-4 max-h-96 overflow-y-auto">
                 {statusTasks.map(task => (
                   <div key={task.id} className="bg-white/5 border border-white/10 rounded-xl p-4 hover:bg-white/10 transition-all duration-200">
                     <div className="flex items-start justify-between mb-3">
                       <h4 className="text-sm font-semibold text-white flex-1">{task.taskLabel}</h4>
+
                       {user?.role === 'MANAGER' && (
-                        <button
-                          onClick={() => {
-                            setSelectedTask(task);
-                            setShowAssignTask(true);
-                          }}
-                          className="ml-2 p-1 text-slate-400 hover:text-purple-400 transition-colors"
-                        >
-                          <UserPlus className="w-4 h-4" />
-                        </button>
+                        <div className="flex items-center space-x-2">
+                          <button
+                            onClick={() => {
+                              setSelectedTask(task);
+                              setShowAssignTask(true);
+                            }}
+                            className="p-1 text-slate-400 hover:text-purple-400 transition-colors"
+                            title="Assign task"
+                          >
+                            <UserPlus className="w-4 h-4" />
+                          </button>
+
+                          <button
+                            onClick={() => handleDeleteTask(task.id)} // <-- delete logic
+                            className="p-1 text-red-400 hover:text-red-600 transition-colors"
+                            title="Delete task"
+                          >
+                            <Trash className="w-4 h-4" />
+                          </button>
+                        </div>
                       )}
                     </div>
 
@@ -241,8 +285,9 @@ const TaskPage = () => {
                       )}
                     </div>
 
+
                     {user?.role === 'DEVELOPER' && (
-                      <div className="flex space-x-2">
+                      <div className="flex flex-wrap items-center gap-2 mt-2">
                         {['TODO', 'IN_PROGRESS', 'DONE'].map(newStatus => (
                           <button
                             key={newStatus}
@@ -256,10 +301,26 @@ const TaskPage = () => {
                             {newStatus.replace('_', ' ')}
                           </button>
                         ))}
+
+                        <button
+                          onClick={() => {
+                            setEditableTask(task);
+                            setShowEditTaskModal(true);
+                          }}
+                          className="p-1 text-purple-300 hover:text-purple-400 border border-purple-500/30 rounded-lg bg-gradient-to-r from-purple-500/10 to-pink-500/10 transition-all"
+                          title="Edit task"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </button>
                       </div>
                     )}
+
+
+
+
                   </div>
                 ))}
+
                 {statusTasks.length === 0 && (
                   <div className="text-center py-8 text-slate-400">
                     <p className="text-sm">No tasks in this column</p>
@@ -269,7 +330,30 @@ const TaskPage = () => {
             </div>
           ))}
         </div>
+
+        {/* End of Task Columns */}
       </div>
+
+
+
+      {/* Update Task Modal */}
+
+      {showEditTaskModal && editableTask && (
+        <EditTaskModal
+          task={editableTask}
+          onClose={() => {
+            setShowEditTaskModal(false);
+            setEditableTask(null);
+          }}
+          onSave={async () => {
+            await loadTasks();
+            setShowEditTaskModal(false);
+            setEditableTask(null);
+          }}
+        />
+      )}
+
+
 
       {/* Add Task Modal */}
       {showAddTask && user?.role === 'MANAGER' && (

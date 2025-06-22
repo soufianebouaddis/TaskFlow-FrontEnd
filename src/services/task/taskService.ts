@@ -8,15 +8,20 @@ const add = async (task: TaskRequest) :  Promise<AxiosResponse<TaskResponse>> =>
 };
 
 const update = async (taskId:number,task: Task) :  Promise<AxiosResponse<TaskResponse>> => {
-    return axiosInstance.post<TaskResponse>(`${BASE_URL}/tasks/${taskId}`, task);
+    console.log('Updating task:', taskId, task);
+    return axiosInstance.put<TaskResponse>(`${BASE_URL}/tasks/${taskId}`, task);
 };
 const tasks = async () :  Promise<AxiosResponse<TaskResponse>> => {
     return axiosInstance.get<TaskResponse>(`${BASE_URL}/tasks`);
 };
 
+const deleteTask = async (taskId:number) :  Promise<AxiosResponse<void>> => {
+    return axiosInstance.delete<void>(`${BASE_URL}/tasks/${taskId}`);
+}
+
 export const taskService = {
    add,
    update,
-   tasks
-
+   tasks,
+   deleteTask
 };
