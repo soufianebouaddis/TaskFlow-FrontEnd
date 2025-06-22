@@ -19,11 +19,17 @@ const logout = (): Promise<AxiosResponse<void>> => {
     return axiosInstance.post(`${BASE_URL}/auth/logout`, {});
 };
 
+const updateProfile = (profileData: any): Promise<AxiosResponse<any>> => {
+    return axiosInstance.put<any>(`${BASE_URL}/auth/profile`, profileData);
+}
+
+
 const authService = {
     login,
     register,
     logout,
-    profile
+    profile,
+    updateProfile
 
 };
 

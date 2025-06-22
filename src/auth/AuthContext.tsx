@@ -1,6 +1,6 @@
 import { createContext, useState, useEffect, type ReactNode } from 'react';
 import type { AuthContextType } from '../types/AuthContextType';
-import type { User } from '../types/User';
+import type { User } from '../types/task-type/User';
 import authService from '../services/auth/authService';
 
 export const AuthContext = createContext<AuthContextType>({} as AuthContextType);
@@ -11,7 +11,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const fetchUser = async () => {
     try {
       const response = await authService.profile();
-      setUser(response.data);
+      
+      setUser(response.data.data);
     } catch {
       setUser(null);
       localStorage.removeItem('isLoggedIn');
