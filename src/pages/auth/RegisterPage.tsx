@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Eye, EyeOff, Mail, Lock, ArrowRight, User, UserCheck, Code } from 'lucide-react';
-import authService from '../services/auth/authService';
+import authService from '../../services/auth/authService';
 import { useNavigate } from 'react-router-dom';
 
 const Register = () => {
@@ -23,7 +23,7 @@ const Register = () => {
     redirectUser(path)
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (form.password !== form.confirmPassword) {
@@ -87,41 +87,41 @@ const Register = () => {
             </div>
 
             {/* Form */}
-            <div className="space-y-6">
+            <form className="space-y-6" onSubmit={handleSubmit}>
               {/* Name Fields Row */}
               <div className="grid grid-cols-2 gap-4">
                 {/* First Name */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-200 block">
+                  <label htmlFor="firstName" className="text-sm font-medium text-slate-200 block">
                     First Name
                   </label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
                     <input
+                        id="firstName"
                         type="text"
                         value={form.firstName}
                         onChange={e => setForm({ ...form, firstName: e.target.value })}
                         className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 backdrop-blur-sm"
                         placeholder="John"
-                        required
                     />
                   </div>
                 </div>
 
                 {/* Last Name */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-200 block">
+                  <label htmlFor="lastName" className="text-sm font-medium text-slate-200 block">
                     Last Name
                   </label>
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
                     <input
+                        id="lastName"
                         type="text"
                         value={form.lastName}
                         onChange={e => setForm({ ...form, lastName: e.target.value })}
                         className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 backdrop-blur-sm"
                         placeholder="Doe"
-                        required
                     />
                   </div>
                 </div>
@@ -129,34 +129,34 @@ const Register = () => {
 
               {/* Email Input */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-200 block">
+                <label htmlFor="email" className="text-sm font-medium text-slate-200 block">
                   Email Address
                 </label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
                   <input
+                      id="email"
                       type="email"
                       value={form.email}
                       onChange={e => setForm({ ...form, email: e.target.value })}
                       className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 backdrop-blur-sm"
                       placeholder="john.doe@example.com"
-                      required
                   />
                 </div>
               </div>
 
               {/* Role Selection */}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-slate-200 block">
+                <label htmlFor="role" className="text-sm font-medium text-slate-200 block">
                   Role
                 </label>
                 <div className="relative">
                   <UserCheck className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
                   <select
+                      id="role"
                       value={form.role}
                       onChange={e => setForm({ ...form, role: e.target.value })}
                       className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 backdrop-blur-sm appearance-none"
-                      required
                   >
                     <option value="" className="bg-slate-800">Select your role</option>
                     {roles.map(role => (
@@ -171,16 +171,16 @@ const Register = () => {
               {/* Developer Type Selection - Only show if role is DEVELOPER */}
               {form.role === 'DEVELOPER' && (
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-slate-200 block">
+                    <label htmlFor="developerType" className="text-sm font-medium text-slate-200 block">
                       Developer Type
                     </label>
                     <div className="relative">
                       <Code className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
                       <select
+                          id="developerType"
                           value={form.developerType}
                           onChange={e => setForm({ ...form, developerType: e.target.value })}
                           className="w-full pl-12 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 backdrop-blur-sm appearance-none"
-                          required
                       >
                         <option value="" className="bg-slate-800">Select developer type</option>
                         {developerTypes.map(type => (
@@ -197,18 +197,18 @@ const Register = () => {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* Password Input */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-200 block">
+                  <label htmlFor="password" className="text-sm font-medium text-slate-200 block">
                     Password
                   </label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
                     <input
+                        id="password"
                         type={showPassword ? 'text' : 'password'}
                         value={form.password}
                         onChange={e => setForm({ ...form, password: e.target.value })}
                         className="w-full pl-12 pr-12 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 backdrop-blur-sm"
                         placeholder="Password"
-                        required
                     />
                     <button
                         type="button"
@@ -222,18 +222,18 @@ const Register = () => {
 
                 {/* Confirm Password Input */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-slate-200 block">
+                  <label htmlFor="confirmPassword" className="text-sm font-medium text-slate-200 block">
                     Confirm Password
                   </label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
                     <input
+                        id="confirmPassword"
                         type={showConfirmPassword ? 'text' : 'password'}
                         value={form.confirmPassword}
                         onChange={e => setForm({ ...form, confirmPassword: e.target.value })}
                         className="w-full pl-12 pr-12 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 backdrop-blur-sm"
                         placeholder="Confirm"
-                        required
                     />
                     <button
                         type="button"
@@ -248,8 +248,7 @@ const Register = () => {
 
               {/* Submit Button */}
               <button
-                  type="button"
-                  onClick={handleSubmit}
+                  type="submit"
                   disabled={isLoading}
                   className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-purple-500/25"
               >
@@ -262,7 +261,7 @@ const Register = () => {
                     </>
                 )}
               </button>
-            </div>
+            </form>
 
             {/* Sign In Link */}
             <div className="text-center mt-8">

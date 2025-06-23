@@ -5,14 +5,14 @@ import '@testing-library/jest-dom';
 import { BrowserRouter } from 'react-router-dom';
 import Login from './LoginPage';
 
-// Mock navigate function with proper typing
+
 const mockNavigate = jest.fn();
 jest.mock('react-router-dom', () => ({
   ...jest.requireActual('react-router-dom'),
   useNavigate: () => mockNavigate,
 }));
 
-// Mock login function with proper typing
+
 const mockLogin = jest.fn();
 jest.mock('../../context/useAuth', () => ({
   useAuth: () => ({
@@ -20,15 +20,14 @@ jest.mock('../../context/useAuth', () => ({
   }),
 }));
 
-// Mock global alert
+
 global.alert = jest.fn();
 
-// Wrapper component with proper typing
 const LoginWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <BrowserRouter>{children}</BrowserRouter>
 );
 
-// Type definitions for form data
+
 interface LoginFormData {
   email: string;
   password: string;
@@ -116,14 +115,14 @@ describe('Login Component', () => {
       const passwordInput = screen.getByLabelText('Password') as HTMLInputElement;
       const toggleButton = screen.getByRole('button', { name: '' });
       
-      // Initially password type
+      
       expect(passwordInput).toHaveAttribute('type', 'password');
       
-      // Click to show password
+      
       await user.click(toggleButton);
       expect(passwordInput).toHaveAttribute('type', 'text');
       
-      // Click to hide password
+      
       await user.click(toggleButton);
       expect(passwordInput).toHaveAttribute('type', 'password');
     });
@@ -198,7 +197,7 @@ describe('Login Component', () => {
       await user.type(passwordInput, 'password123');
       await user.click(submitButton);
       
-      // Check loading state
+     
       expect(submitButton).toBeDisabled();
       expect(document.querySelector('.animate-spin')).toBeInTheDocument();
     });
@@ -304,9 +303,6 @@ describe('Login Component', () => {
       
       const submitButton = screen.getByRole('button', { name: /sign in/i });
       await user.click(submitButton);
-      
-      // Since the form has required fields, it should not submit when empty
-      // The browser's built-in validation should prevent submission
       expect(mockLogin).not.toHaveBeenCalled();
     });
   });
@@ -379,7 +375,7 @@ describe('Login Component', () => {
       renderLogin();
       
       const toggleButtons = screen.getAllByRole('button');
-      expect(toggleButtons).toHaveLength(2); // Submit button + toggle button
+      expect(toggleButtons).toHaveLength(2); 
     });
 
     test('form has proper input types', () => {
@@ -397,7 +393,7 @@ describe('Login Component', () => {
     test('renders mail and lock icons in input fields', () => {
       const { container } = renderLogin();
       
-      // Check for SVG icons
+     
       const icons = container.querySelectorAll('svg');
       expect(icons.length).toBeGreaterThan(0);
     });
@@ -405,9 +401,9 @@ describe('Login Component', () => {
     test('renders eye/eye-off icons for password toggle', () => {
       const { container } = renderLogin();
       
-      // Check for eye icons (should have more than just mail/lock icons)
+      
       const eyeIcons = container.querySelectorAll('svg');
-      expect(eyeIcons.length).toBeGreaterThan(2); // Mail + Lock + Eye icons
+      expect(eyeIcons.length).toBeGreaterThan(2);
     });
   });
 

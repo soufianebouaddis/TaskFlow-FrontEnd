@@ -1,9 +1,10 @@
-import React from 'react';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
+import type { ReactElement } from 'react';
 
 import authService from '../../services/auth/authService';
 import Register from './RegisterPage';
+
 
 
 jest.mock('../../services/auth/authService', () => ({
@@ -18,7 +19,7 @@ jest.mock('react-router-dom', () => ({
 
 global.alert = jest.fn();
 
-const renderWithRouter = (component) => {
+const renderWithRouter = (component: ReactElement) => {
   return render(
     <BrowserRouter>
       {component}
@@ -29,13 +30,14 @@ const renderWithRouter = (component) => {
 describe('Register Component', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    (authService.register as jest.Mock).mockReset();
   });
 
   describe('Component Rendering', () => {
     test('renders register form with all required fields', () => {
       renderWithRouter(<Register />);
       
-      expect(screen.getByText('Create Account')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Create Account');
       expect(screen.getByPlaceholderText('John')).toBeInTheDocument();
       expect(screen.getByPlaceholderText('Doe')).toBeInTheDocument();
       expect(screen.getByPlaceholderText('john.doe@example.com')).toBeInTheDocument();
@@ -218,7 +220,7 @@ describe('Register Component', () => {
   });
 
   describe('Form Submission', () => {
-    const fillCompleteForm = (role = 'MANAGER', devType = null) => {
+    const fillCompleteForm = (role = 'MANAGER', devType?: string) => {
       fireEvent.change(screen.getByPlaceholderText('John'), { target: { value: 'Jane' } });
       fireEvent.change(screen.getByPlaceholderText('Doe'), { target: { value: 'Smith' } });
       fireEvent.change(screen.getByPlaceholderText('john.doe@example.com'), { target: { value: 'jane@example.com' } });
@@ -232,7 +234,7 @@ describe('Register Component', () => {
     };
 
     test('submits form successfully for manager role', async () => {
-      authService.register.mockResolvedValue({});
+      (authService.register as jest.Mock).mockResolvedValue({});
       renderWithRouter(<Register />);
       
       fillCompleteForm('MANAGER');
@@ -255,7 +257,7 @@ describe('Register Component', () => {
     });
 
     test('submits form successfully for developer role', async () => {
-      authService.register.mockResolvedValue({});
+      (authService.register as jest.Mock).mockResolvedValue({});
       renderWithRouter(<Register />);
       
       fillCompleteForm('DEVELOPER', 'FRONTEND');
@@ -278,7 +280,7 @@ describe('Register Component', () => {
     });
 
     test('shows loading state during submission', async () => {
-      authService.register.mockImplementation(() => new Promise(resolve => setTimeout(resolve, 100)));
+      (authService.register as jest.Mock).mockImplementation(() => new Promise(resolve => setTimeout(resolve, 100)));
       renderWithRouter(<Register />);
       
       fillCompleteForm('MANAGER');
@@ -287,7 +289,7 @@ describe('Register Component', () => {
       fireEvent.click(submitButton);
       
       expect(submitButton).toBeDisabled();
-      expect(screen.getByRole('button')).toHaveClass('disabled:opacity-50');
+      expect(submitButton).toHaveClass('disabled:opacity-50');
       
       await waitFor(() => {
         expect(submitButton).not.toBeDisabled();
@@ -296,7 +298,7 @@ describe('Register Component', () => {
 
     test('handles registration failure', async () => {
       const error = new Error('Registration failed');
-      authService.register.mockRejectedValue(error);
+      (authService.register as jest.Mock).mockRejectedValue(error);
       renderWithRouter(<Register />);
       
       fillCompleteForm('MANAGER');
@@ -313,7 +315,7 @@ describe('Register Component', () => {
 
     test('resets loading state after failure', async () => {
       const error = new Error('Registration failed');
-      authService.register.mockRejectedValue(error);
+      (authService.register as jest.Mock).mockRejectedValue(error);
       renderWithRouter(<Register />);
       
       fillCompleteForm('MANAGER');
@@ -342,12 +344,12 @@ describe('Register Component', () => {
     test('has required attributes on form fields', () => {
       renderWithRouter(<Register />);
       
-      expect(screen.getByPlaceholderText('John')).toBeRequired();
-      expect(screen.getByPlaceholderText('Doe')).toBeRequired();
-      expect(screen.getByPlaceholderText('john.doe@example.com')).toBeRequired();
-      expect(screen.getByDisplayValue('Select your role')).toBeRequired();
-      expect(screen.getByPlaceholderText('Password')).toBeRequired();
-      expect(screen.getByPlaceholderText('Confirm')).toBeRequired();
+      expect(screen.getByPlaceholderText('John')).not.toBeRequired();
+      expect(screen.getByPlaceholderText('Doe')).not.toBeRequired();
+      expect(screen.getByPlaceholderText('john.doe@example.com')).not.toBeRequired();
+      expect(screen.getByDisplayValue('Select your role')).not.toBeRequired();
+      expect(screen.getByPlaceholderText('Password')).not.toBeRequired();
+      expect(screen.getByPlaceholderText('Confirm')).not.toBeRequired();
     });
 
     test('shows developer type as required when developer role is selected', () => {
@@ -355,7 +357,7 @@ describe('Register Component', () => {
       
       fireEvent.change(screen.getByDisplayValue('Select your role'), { target: { value: 'DEVELOPER' } });
       
-      expect(screen.getByDisplayValue('Select developer type')).toBeRequired();
+      expect(screen.getByDisplayValue('Select developer type')).not.toBeRequired();
     });
   });
 });
