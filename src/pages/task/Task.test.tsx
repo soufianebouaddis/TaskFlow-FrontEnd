@@ -180,6 +180,7 @@ describe('TaskPage', () => {
     assignTask: jest.fn(),
     addDeveloperToTeam: jest.fn(),
     loadTasks: jest.fn(),
+    loadDevelopers: jest.fn(),
     updateTask: jest.fn(),
     isLoading: false
   };
@@ -467,11 +468,11 @@ describe('TaskPage', () => {
   });
 
   describe('useEffect Hook', () => {
-    it('calls loadTasks when user is available', () => {
-      render(<TaskPage />);
-
-      expect(mockTaskContextValue.loadTasks).toHaveBeenCalled();
-    });
+    // Removed: 'calls loadTasks when user is available' test because loadTasks is now called by the context, not by TaskPage.
+    // it('calls loadTasks when user is available', () => {
+    //   render(<TaskPage />);
+    //   expect(mockTaskContextValue.loadTasks).toHaveBeenCalled();
+    // });
 
     it('does not call loadTasks when user is null', () => {
       mockUseAuth.mockReturnValue({

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Eye, EyeOff, Mail, Lock, ArrowRight, User, UserCheck, Code } from 'lucide-react';
 import authService from '../../services/auth/authService';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
 
 const Register = () => {
   const redirectUser = useNavigate();
@@ -27,17 +28,17 @@ const Register = () => {
     e.preventDefault();
 
     if (form.password !== form.confirmPassword) {
-      alert('Passwords do not match');
+      toast.error('Passwords do not match');
       return;
     }
 
     if (!form.role) {
-      alert('Please select a role');
+      toast.error('Please select a role');
       return;
     }
 
     if (form.role === 'DEVELOPER' && !form.developerType) {
-      alert('Please select developer type');
+      toast.error('Please select developer type');
       return;
     }
 
@@ -52,10 +53,10 @@ const Register = () => {
         developerType: form.role === 'DEVELOPER' ? form.developerType : null
       };
       await authService.register(registerRequest);
-
+      toast.success('Registration successful! Welcome to TaskFlow!');
       navigate('/tasks');
     } catch (error) {
-      alert('Registration failed');
+      toast.error('Registration failed');
       console.error('Registration error:', error);
     } finally {
       setIsLoading(false);
@@ -70,15 +71,13 @@ const Register = () => {
   const developerTypes = [
     { value: 'FRONTEND', label: 'Frontend Developer' },
     { value: 'BACKEND', label: 'Backend Developer' },
-    { value: 'TESTER', label: 'Tester' },
+    { value: 'FULLSTACK', label: 'Full Stack Developer' },
   ];
 
   return (
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
         <div className="w-full max-w-lg">
-          {/* Glass morphism card */}
           <div className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/20 p-8">
-            {/* Header */}
             <div className="text-center mb-8">
               <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full mx-auto mb-4 flex items-center justify-center">
                 <UserCheck className="w-8 h-8 text-white" />
@@ -86,11 +85,8 @@ const Register = () => {
               <h1 className="text-3xl font-bold text-white mb-2">Create Account</h1>
             </div>
 
-            {/* Form */}
             <form className="space-y-6" onSubmit={handleSubmit}>
-              {/* Name Fields Row */}
               <div className="grid grid-cols-2 gap-4">
-                {/* First Name */}
                 <div className="space-y-2">
                   <label htmlFor="firstName" className="text-sm font-medium text-slate-200 block">
                     First Name
@@ -108,7 +104,6 @@ const Register = () => {
                   </div>
                 </div>
 
-                {/* Last Name */}
                 <div className="space-y-2">
                   <label htmlFor="lastName" className="text-sm font-medium text-slate-200 block">
                     Last Name
@@ -127,7 +122,6 @@ const Register = () => {
                 </div>
               </div>
 
-              {/* Email Input */}
               <div className="space-y-2">
                 <label htmlFor="email" className="text-sm font-medium text-slate-200 block">
                   Email Address
@@ -145,7 +139,6 @@ const Register = () => {
                 </div>
               </div>
 
-              {/* Role Selection */}
               <div className="space-y-2">
                 <label htmlFor="role" className="text-sm font-medium text-slate-200 block">
                   Role
@@ -168,7 +161,6 @@ const Register = () => {
                 </div>
               </div>
 
-              {/* Developer Type Selection - Only show if role is DEVELOPER */}
               {form.role === 'DEVELOPER' && (
                   <div className="space-y-2">
                     <label htmlFor="developerType" className="text-sm font-medium text-slate-200 block">
@@ -193,9 +185,7 @@ const Register = () => {
                   </div>
               )}
 
-              {/* Password Fields Row */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Password Input */}
                 <div className="space-y-2">
                   <label htmlFor="password" className="text-sm font-medium text-slate-200 block">
                     Password
@@ -220,7 +210,6 @@ const Register = () => {
                   </div>
                 </div>
 
-                {/* Confirm Password Input */}
                 <div className="space-y-2">
                   <label htmlFor="confirmPassword" className="text-sm font-medium text-slate-200 block">
                     Confirm Password
@@ -246,7 +235,6 @@ const Register = () => {
                 </div>
               </div>
 
-              {/* Submit Button */}
               <button
                   type="submit"
                   disabled={isLoading}
@@ -263,7 +251,6 @@ const Register = () => {
               </button>
             </form>
 
-            {/* Sign In Link */}
             <div className="text-center mt-8">
               <span className="text-slate-400">Already have an account? </span>
               <a href="/login" className="text-purple-400 hover:text-purple-300 font-medium transition-colors">
@@ -272,7 +259,6 @@ const Register = () => {
             </div>
           </div>
 
-          {/* Footer */}
           <div className="text-center mt-8 text-slate-400 text-sm">
             <p>© 2025 TaskFlow. All rights reserved.</p>
           </div>

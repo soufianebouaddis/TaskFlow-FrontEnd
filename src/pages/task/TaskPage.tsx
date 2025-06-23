@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 
 import { UserPlus, Trash, AlertCircle, Clock, CheckCircle, Plus, Users, Mail, Code, Pencil } from 'lucide-react';
 import { useAuth } from '../../context/useAuth';
@@ -12,6 +12,7 @@ import AssignTaskModal from '../../components/AssignTaskModal';
 import AddDeveloperToTeamModal from '../../components/AddDeveloperToTeamModal';
 import ProfileModal from '../../components/Profile';
 import Header from '../../components/Header';
+import toast from 'react-hot-toast';
 
 // Extended User interface to include developerDetails
 interface ExtendedUser {
@@ -63,25 +64,25 @@ const TaskPage = () => {
     lastName: user?.lastName || ''
   });
 
-  useEffect(() => {
-    if (user) {
-      loadTasks();
-    }
-  }, [user]);
-
   const handleAddTask = async () => {
     if (!newTask.taskLabel.trim()) return;
 
-    await addTask(newTask);
-    setNewTask({ taskLabel: '', taskState: 'TODO' });
-    setShowAddTask(false);
+    try {
+      await addTask(newTask);
+      setNewTask({ taskLabel: '', taskState: 'TODO' });
+      setShowAddTask(false);
+    } catch (error) {
+    }
   };
 
   const handleAssignTask = async (developerId: string) => {
     if (!selectedTask) return;
-    await assignTask(selectedTask.id, developerId);
-    setShowAssignTask(false);
-    setSelectedTask(null);
+    try {
+      await assignTask(selectedTask.id, developerId);
+      setShowAssignTask(false);
+      setSelectedTask(null);
+    } catch (error) {
+    }
   };
 
   const handleUpdateProfile = async () => {
@@ -90,17 +91,22 @@ const TaskPage = () => {
         await authService.updateProfile(user.id, profileData);
         await fetchUser();
         setShowProfile(false);
+        toast.success('Profile updated successfully!');
       }
     } catch (error) {
       console.error('Error updating profile:', error);
+      toast.error('Failed to update profile');
     }
   };
 
   const handleAddDeveloperToTeam = async (developerId: string) => {
     if (user?.id) {
-      await addDeveloperToTeam(developerId, user.id);
-      await fetchUser();
-      setShowAddDeveloperToTeam(false);
+      try {
+        await addDeveloperToTeam(developerId, user.id);
+        await fetchUser();
+        setShowAddDeveloperToTeam(false);
+      } catch (error) {
+      }
     }
   };
 
@@ -143,21 +149,20 @@ const TaskPage = () => {
     try {
       await taskService.deleteTask(taskId);
       await loadTasks();
+      toast.success('Task deleted successfully');
     } catch (error) {
       console.error('Failed to delete task:', error);
+      toast.error('Failed to delete task');
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
-      {/* Header */}
       <Header user={user || {}} onOpenProfile={() => setShowProfile(true)} onLogout={logout} />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Manager View */}
         {user?.role === 'MANAGER' && (
           <>
-            {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
               <div className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-xl p-6 border border-white/20">
                 <div className="flex items-center">
@@ -205,7 +210,6 @@ const TaskPage = () => {
               </div>
             </div>
 
-            {/* Developers Section */}
             {(user as ExtendedUser).developerDetails?.team && (
               <div className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 mb-8">
                 <div className="px-6 py-4 border-b border-white/20 flex justify-between items-center">
@@ -244,7 +248,6 @@ const TaskPage = () => {
               </div>
             )}
 
-            {/* Add Task Button */}
             <div className="mb-6">
               <button
                 onClick={() => setShowAddTask(true)}
@@ -257,7 +260,6 @@ const TaskPage = () => {
           </>
         )}
 
-        {/* Task Columns */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {Object.entries(groupedTasks).map(([status, statusTasks]) => (
             <div key={status} className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20">
@@ -303,8 +305,6 @@ const TaskPage = () => {
                       )}
                     </div>
 
-
-                    {/* developer role section */}
                     {user?.role === 'DEVELOPER' && (
                       <div className="flex flex-wrap items-center gap-2 mt-2">
                         {['TODO', 'IN_PROGRESS', 'DONE'].map(newStatus => (
@@ -331,10 +331,6 @@ const TaskPage = () => {
                         </button>
                       </div>
                     )}
-                    {/* end developer role section */}
-
-
-
                   </div>
                 ))}
 
@@ -347,13 +343,7 @@ const TaskPage = () => {
             </div>
           ))}
         </div>
-
-        {/* End of Task Columns */}
       </div>
-
-
-
-      {/* Update Task Modal */}
 
       {showEditTaskModal && editableTask && (
         <EditTaskModal
@@ -370,9 +360,6 @@ const TaskPage = () => {
         />
       )}
 
-
-
-      {/* Add Task Modal */}
       {showAddTask && user?.role === 'MANAGER' && (
         <AddTaskModal
           newTask={newTask}
@@ -383,7 +370,6 @@ const TaskPage = () => {
         />
       )}
 
-      {/* Assign Task Modal */}
       {showAssignTask && selectedTask && (
         <AssignTaskModal
           selectedTask={{
@@ -400,8 +386,6 @@ const TaskPage = () => {
         />
       )}
 
-
-      {/* Profile Modal */}
       {showProfile && user && (
         <ProfileModal
           profileData={profileData}
@@ -412,7 +396,6 @@ const TaskPage = () => {
         />
       )}
 
-      {/* Add Developer to Team Modal */}
       {showAddDeveloperToTeam && (
         <AddDeveloperToTeamModal
           developers={developers.filter(dev => 
@@ -424,7 +407,6 @@ const TaskPage = () => {
         />
       )}
 
-      {/* Loading Overlay */}
       {isLoading && !showAddTask && !showAssignTask && !showProfile && !showAddDeveloperToTeam && (
         <div className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 flex items-center justify-center">
           <div className="bg-white/10 backdrop-blur-xl rounded-2xl p-6 border border-white/20">
