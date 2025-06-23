@@ -1,10 +1,11 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
 import PrivateRoute from './components/PrivateRoute';
-import Login from './pages/LoginPage';
-import Register from './pages/RegisterPage';
-import TaskPage from './pages/TaskPage';
-import Home from './pages/Home';
+
+import Home from './pages/home/Home';
+import Login from './pages/auth/LoginPage';
+import Register from './pages/auth/RegisterPage';
+import TaskPage from './pages/task/TaskPage';
 
 
 

@@ -1,15 +1,15 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { useAuth } from '../context/useAuth';
+
 import { UserPlus, Trash, Calendar, AlertCircle, Clock, CheckCircle, Plus, Users, Mail, Code, Pencil } from 'lucide-react';
-import { taskService } from '../services/task/taskService';
-import authService from '../services/auth/authService';
-import Header from '../components/Header';
-import ProfileModal from '../components/Profile';
-import AddTaskModal from '../components/AddTaskModal';
-import AssignTaskModal from '../components/AssignTaskModal';
-import { useTaskContext } from '../context/useTask';
-import type { Task, UpdateRequest } from '../types/task-type/Task';
-import EditTaskModal from '../components/EditTaskModal';
+import { useAuth } from '../../context/useAuth';
+import { useTaskContext } from '../../context/useTask';
+import type { Task } from '../../types/task-type/Task';
+import authService from '../../services/auth/authService';
+import { taskService } from '../../services/task/taskService';
+import EditTaskModal from '../../components/EditTaskModal';
+import AddTaskModal from '../../components/AddTaskModal';
+import AssignTaskModal from '../../components/AssignTaskModal';
+import ProfileModal from '../../components/Profile';
 
 const TaskPage = () => {
   const { user, fetchUser, logout } = useAuth();

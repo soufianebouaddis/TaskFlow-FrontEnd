@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { Eye, EyeOff, Mail, Lock, ArrowRight } from 'lucide-react';
-
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../context/useAuth';
+import { useAuth } from '../../context/useAuth';
+
 
 const Login = () => {
   const [form, setForm] = useState({ email: '', password: '' });
@@ -11,11 +11,11 @@ const Login = () => {
   const redirectUSer = useNavigate()
   const { login } = useAuth();
 
-  const navigate = (path:string) => {
+  const navigate = (path: string) => {
     redirectUSer(path);
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsLoading(true);
     try {
@@ -27,6 +27,7 @@ const Login = () => {
       setIsLoading(false);
     }
   };
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4">
@@ -43,15 +44,16 @@ const Login = () => {
           </div>
 
           {/* Form */}
-          <div className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-6">
             {/* Email Input */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-200 block">
+              <label htmlFor="email" className="text-sm font-medium text-slate-200 block">
                 Email Address
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
                 <input
+                  id="email"
                   type="email"
                   value={form.email}
                   onChange={e => setForm({ ...form, email: e.target.value })}
@@ -64,12 +66,13 @@ const Login = () => {
 
             {/* Password Input */}
             <div className="space-y-2">
-              <label className="text-sm font-medium text-slate-200 block">
+              <label htmlFor="password" className="text-sm font-medium text-slate-200 block">
                 Password
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
                 <input
+                  id="password"
                   type={showPassword ? 'text' : 'password'}
                   value={form.password}
                   onChange={e => setForm({ ...form, password: e.target.value })}
@@ -88,8 +91,7 @@ const Login = () => {
             </div>
             {/* Submit Button */}
             <button
-              type="button"
-              onClick={handleSubmit}
+              type="submit"
               disabled={isLoading}
               className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 flex items-center justify-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed shadow-lg hover:shadow-purple-500/25"
             >
@@ -102,7 +104,7 @@ const Login = () => {
                 </>
               )}
             </button>
-          </div>
+          </form>
           {/* Sign Up Link */}
           <div className="text-center mt-8">
             <span className="text-slate-400">Don't have an account? </span>
