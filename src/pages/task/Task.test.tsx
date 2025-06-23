@@ -1,5 +1,4 @@
-import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 
@@ -75,50 +74,68 @@ const mockTaskService = taskService as jest.Mocked<typeof taskService>;
 
 describe('TaskPage', () => {
   const mockManagerUser = {
-    id: 1,
+    id: '1',
     firstName: 'John',
     lastName: 'Manager',
     email: 'manager@example.com',
-    role: 'MANAGER' as const,
+    role: 'MANAGER',
+    password: '',
+    createdAt: new Date(),
+    updatedAt: new Date(),
     developerDetails: {
       team: [
         {
-          id: 2,
+          id: '2',
           firstName: 'Jane',
           lastName: 'Developer',
           email: 'jane@example.com',
-          developerType: 'Frontend Developer'
+          developerType: 'Frontend Developer',
+          password: '',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          role: 'DEVELOPER'
         },
         {
-          id: 3,
+          id: '3',
           firstName: 'Bob',
           lastName: 'Developer',
           email: 'bob@example.com',
-          developerType: 'Backend Developer'
+          developerType: 'Backend Developer',
+          password: '',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+          role: 'DEVELOPER'
         }
       ]
     }
   };
 
   const mockDeveloperUser = {
-    id: 2,
+    id: '2',
     firstName: 'Jane',
     lastName: 'Developer',
     email: 'jane@example.com',
-    role: 'DEVELOPER' as const,
+    role: 'DEVELOPER',
+    password: '',
+    createdAt: new Date(),
+    updatedAt: new Date(),
     developerDetails: {
       tasks: [
         {
           id: 1,
           taskLabel: 'Developer Task 1',
-          taskState: 'TODO' as const,
-          assignedTo: 2
+          taskState: 'TODO',
+          assignedTo: '2',
+          createdAt: new Date(),
+          updatedAt: new Date()
         },
         {
           id: 2,
           taskLabel: 'Developer Task 2',
-          taskState: 'IN_PROGRESS' as const,
-          assignedTo: 2
+          taskState: 'IN_PROGRESS',
+          assignedTo: '2',
+          createdAt: new Date(),
+          updatedAt: new Date()
         }
       ]
     }
@@ -128,26 +145,32 @@ describe('TaskPage', () => {
     {
       id: 1,
       taskLabel: 'Task 1',
-      taskState: 'TODO' as const,
-      assignedTo: 2
+      taskState: 'TODO',
+      assignedTo: '2',
+      createdAt: new Date(),
+      updatedAt: new Date()
     },
     {
       id: 2,
       taskLabel: 'Task 2',
-      taskState: 'IN_PROGRESS' as const,
-      assignedTo: 2
+      taskState: 'IN_PROGRESS',
+      assignedTo: '2',
+      createdAt: new Date(),
+      updatedAt: new Date()
     },
     {
       id: 3,
       taskLabel: 'Task 3',
-      taskState: 'DONE' as const,
-      assignedTo: 3
+      taskState: 'DONE',
+      assignedTo: '3',
+      createdAt: new Date(),
+      updatedAt: new Date()
     }
   ];
 
   const mockDevelopers = [
-    { id: 2, firstName: 'Jane', lastName: 'Developer', email: 'jane@example.com' },
-    { id: 3, firstName: 'Bob', lastName: 'Developer', email: 'bob@example.com' }
+    { id: '2', firstName: 'Jane', lastName: 'Developer', email: 'jane@example.com', developerType: 'Frontend Developer', password: '', createdAt: new Date(), updatedAt: new Date(), role: 'DEVELOPER' },
+    { id: '3', firstName: 'Bob', lastName: 'Developer', email: 'bob@example.com', developerType: 'Backend Developer', password: '', createdAt: new Date(), updatedAt: new Date(), role: 'DEVELOPER' }
   ];
 
   const mockTaskContextValue = {
@@ -155,6 +178,7 @@ describe('TaskPage', () => {
     developers: mockDevelopers,
     addTask: jest.fn(),
     assignTask: jest.fn(),
+    addDeveloperToTeam: jest.fn(),
     loadTasks: jest.fn(),
     updateTask: jest.fn(),
     isLoading: false
@@ -168,12 +192,12 @@ describe('TaskPage', () => {
       fetchUser: jest.fn(),
       logout: jest.fn(),
       login: jest.fn(),
-      register: jest.fn(),
-      isLoading: false,
-      error: null
+      isLoading: false
     });
 
     mockUseTaskContext.mockReturnValue(mockTaskContextValue);
+    mockTaskService.deleteTask.mockResolvedValue({ data: {} } as any);
+    mockAuthService.updateProfile.mockResolvedValue({ data: {} } as any);
   });
 
   describe('Manager Role Tests', () => {
@@ -187,8 +211,10 @@ describe('TaskPage', () => {
       expect(screen.getByText('Completed')).toBeInTheDocument();
 
       // Check stats values
-      expect(screen.getByText('2')).toBeInTheDocument(); // Developers count
-      expect(screen.getByText('1')).toBeInTheDocument(); // TODO tasks count
+      expect(screen.getByTestId('developers-count')).toHaveTextContent('2'); // Developers count
+      expect(screen.getByTestId('todo-count')).toHaveTextContent('1'); // TODO tasks count
+      expect(screen.getByTestId('inprogress-count')).toHaveTextContent('1'); // IN_PROGRESS tasks count
+      expect(screen.getByTestId('done-count')).toHaveTextContent('1'); // DONE tasks count
     });
 
     it('displays team members section for manager', () => {
@@ -242,7 +268,7 @@ describe('TaskPage', () => {
 
     it('calls deleteTask when delete button is clicked', async () => {
       const user = userEvent.setup();
-      mockTaskService.deleteTask.mockResolvedValue(undefined);
+      mockTaskService.deleteTask.mockResolvedValue({ data: {} } as any);
       render(<TaskPage />);
 
       const deleteButton = screen.getAllByTitle('Delete task')[0];
@@ -260,9 +286,7 @@ describe('TaskPage', () => {
         fetchUser: jest.fn(),
         logout: jest.fn(),
         login: jest.fn(),
-        register: jest.fn(),
-        isLoading: false,
-        error: null
+        isLoading: false
       });
     });
 
@@ -278,9 +302,9 @@ describe('TaskPage', () => {
       render(<TaskPage />);
 
       // Should show status buttons for developer tasks
-      expect(screen.getAllByText('TODO')).toHaveLength(2); // One in column header, one in button
-      expect(screen.getAllByText('IN PROGRESS')).toHaveLength(2);
-      expect(screen.getAllByText('DONE')).toHaveLength(1);
+      expect(screen.getAllByRole('button', { name: 'TODO' })).toHaveLength(2); // Two TODO buttons
+      expect(screen.getAllByRole('button', { name: 'IN PROGRESS' })).toHaveLength(2);
+      expect(screen.getAllByRole('button', { name: 'DONE' })).toHaveLength(2);
     });
 
     it('shows edit buttons for developer tasks', () => {
@@ -318,13 +342,9 @@ describe('TaskPage', () => {
       expect(screen.getByText('DONE')).toBeInTheDocument();
 
       // Check task counts in column headers
-      const todoSection = screen.getByText('TODO').closest('.bg-white\\/10');
-      const inProgressSection = screen.getByText('IN PROGRESS').closest('.bg-white\\/10');
-      const doneSection = screen.getByText('DONE').closest('.bg-white\\/10');
-
-      expect(todoSection).toContainElement(screen.getByText('1'));
-      expect(inProgressSection).toContainElement(screen.getByText('1'));
-      expect(doneSection).toContainElement(screen.getByText('1'));
+      expect(screen.getByTestId('todo-count')).toHaveTextContent('1');
+      expect(screen.getByTestId('inprogress-count')).toHaveTextContent('1');
+      expect(screen.getByTestId('done-count')).toHaveTextContent('1');
     });
 
     it('displays empty state when no tasks in column', () => {
@@ -382,12 +402,10 @@ describe('TaskPage', () => {
         fetchUser: mockFetchUser,
         logout: jest.fn(),
         login: jest.fn(),
-        register: jest.fn(),
-        isLoading: false,
-        error: null
+        isLoading: false
       });
 
-      mockAuthService.updateProfile.mockResolvedValue(undefined);
+      mockAuthService.updateProfile.mockResolvedValue({ data: {} } as any);
       render(<TaskPage />);
 
       // Open profile modal
@@ -461,9 +479,7 @@ describe('TaskPage', () => {
         fetchUser: jest.fn(),
         logout: jest.fn(),
         login: jest.fn(),
-        register: jest.fn(),
-        isLoading: false,
-        error: null
+        isLoading: false
       });
 
       render(<TaskPage />);

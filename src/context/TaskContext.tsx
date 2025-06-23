@@ -12,8 +12,9 @@ interface TaskContextType {
   developers: Developer[];
   loadTasks: () => Promise<void>;
   addTask: (data: TaskRequest) => Promise<void>;
-  assignTask: (taskId: number, developerId: number) => Promise<void>;
-  updateTask: (taskId: number, task: any) => Promise<void>;
+  assignTask: (taskId: number, developerId: string) => Promise<void>;
+  addDeveloperToTeam: (developerId: string, managerId: string) => Promise<void>;
+  updateTask: (taskId: number, task: UpdateRequest) => Promise<any>;
   isLoading: boolean;
 }
 
@@ -56,7 +57,7 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const assignTask = async (taskId: number, developerId: number) => {
+  const assignTask = async (taskId: number, developerId: string) => {
     try {
       setIsLoading(true);
       await managerService.assignedTaskToDeveloper(taskId, developerId);
@@ -69,18 +70,31 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
   };
   
   const updateTask = async (taskId: number, task: UpdateRequest) => {
-  try {
-    setIsLoading(true);
-    const response = await taskService.update(taskId, task);
-    await loadTasks();
-    return response; 
-  } catch (err) {
-    console.error('Error updating task:', err);
-    throw err;
-  } finally {
-    setIsLoading(false);
-  }
-};
+    try {
+      setIsLoading(true);
+      const response = await taskService.update(taskId, task);
+      await loadTasks();
+      return response; 
+    } catch (err) {
+      console.error('Error updating task:', err);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const addDeveloperToTeam = async (developerId: string, managerId: string) => {
+    try {
+      setIsLoading(true);
+      await managerService.addDeveloperToTeam(managerId, developerId);
+      await loadTasks();
+    } catch (err) {
+      console.error('Error adding developer to team:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadTasks();
     loadDevelopers();
@@ -94,6 +108,7 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
         loadTasks,
         addTask,
         assignTask,
+        addDeveloperToTeam,
         updateTask,
         isLoading,
       }}

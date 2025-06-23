@@ -22,6 +22,16 @@ export interface TaskResponse {
     headers?: string;
 }
 
+export interface TaskListResponse {
+    timeStamp?: number;
+    status?: number;
+    error?: string;
+    success?: boolean;
+    message?: string;
+    data: Task[];
+    headers?: string;
+}
+
 
 export interface TaskRequest {
     taskLabel: string;
