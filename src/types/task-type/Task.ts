@@ -6,6 +6,10 @@ export interface Task{
     updatedAt:Date;
 }
 
+export interface UpdateRequest {
+    taskLabel?: string;
+    taskState?: string;
+}
 
 
 export interface TaskResponse {
@@ -14,7 +18,7 @@ export interface TaskResponse {
     error?: string;
     success?: boolean;
     message?: string;
-    data: any;
+    data: Task;
     headers?: string;
 }
 

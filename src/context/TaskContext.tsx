@@ -1,10 +1,10 @@
 // context/TaskContext.tsx
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useEffect, useState, type ReactNode } from 'react';
 import { taskService } from '../services/task/taskService';
 import { managerService } from '../services/manager/managerService';
 import { developerService } from '../services/developer/developerService';
 
-import type { Task, TaskRequest } from '../types/task-type/Task';
+import type { Task, TaskRequest, UpdateRequest } from '../types/task-type/Task';
 import type { Developer } from '../types/developer-type/Developer';
 
 interface TaskContextType {
@@ -13,12 +13,14 @@ interface TaskContextType {
   loadTasks: () => Promise<void>;
   addTask: (data: TaskRequest) => Promise<void>;
   assignTask: (taskId: number, developerId: number) => Promise<void>;
+  updateTask: (taskId: number, task: any) => Promise<void>;
   isLoading: boolean;
 }
 
 export const TaskContext = createContext<TaskContextType>({} as TaskContextType);
 
 export const TaskProvider = ({ children }: { children: ReactNode }) => {
+
   const [tasks, setTasks] = useState<Task[]>([]);
   const [developers, setDevelopers] = useState<Developer[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -26,7 +28,7 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
   const loadTasks = async () => {
     try {
       const res = await taskService.tasks();
-      setTasks(res.data.data); // assuming .data.data
+      setTasks(res.data.data);
     } catch (err) {
       console.error('Error loading tasks:', err);
     }
@@ -35,7 +37,7 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
   const loadDevelopers = async () => {
     try {
       const res = await developerService.developers();
-      setDevelopers(res.data.data); // assuming .data.data
+      setDevelopers(res.data.data); 
     } catch (err) {
       console.error('Error loading developers:', err);
     }
@@ -46,6 +48,7 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(true);
       await taskService.add(task);
       await loadTasks();
+      window.location.reload(); 
     } catch (err) {
       console.error('Error adding task:', err);
     } finally {
@@ -64,7 +67,20 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(false);
     }
   };
-
+  
+  const updateTask = async (taskId: number, task: UpdateRequest) => {
+  try {
+    setIsLoading(true);
+    const response = await taskService.update(taskId, task);
+    await loadTasks();
+    return response; 
+  } catch (err) {
+    console.error('Error updating task:', err);
+    throw err;
+  } finally {
+    setIsLoading(false);
+  }
+};
   useEffect(() => {
     loadTasks();
     loadDevelopers();
@@ -78,6 +94,7 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
         loadTasks,
         addTask,
         assignTask,
+        updateTask,
         isLoading,
       }}
     >

@@ -2,20 +2,18 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../context/useAuth';
 import { UserPlus, Trash, Calendar, AlertCircle, Clock, CheckCircle, Plus, Users, Mail, Code, Pencil } from 'lucide-react';
 import { taskService } from '../services/task/taskService';
-import { developerService } from '../services/developer/developerService';
-import { managerService } from '../services/manager/managerService';
 import authService from '../services/auth/authService';
 import Header from '../components/Header';
 import ProfileModal from '../components/Profile';
 import AddTaskModal from '../components/AddTaskModal';
 import AssignTaskModal from '../components/AssignTaskModal';
 import { useTaskContext } from '../context/useTask';
-import type { Task } from '../types/task-type/Task';
+import type { Task, UpdateRequest } from '../types/task-type/Task';
 import EditTaskModal from '../components/EditTaskModal';
 
 const TaskPage = () => {
   const { user, fetchUser, logout } = useAuth();
-  const { tasks, developers, addTask, assignTask, loadTasks, isLoading } = useTaskContext();
+  const { tasks, developers, addTask, assignTask, loadTasks, isLoading, updateTask } = useTaskContext();
 
   const [showEditTaskModal, setShowEditTaskModal] = useState(false);
   const [editableTask, setEditableTask] = useState<Task | null>(null);
@@ -49,21 +47,7 @@ const TaskPage = () => {
     setShowAddTask(false);
   };
 
-  const handleStatusChange = async (taskId:number, newStatus) => {
-    const taskToUpdate = tasks.find(task => task.id === taskId);
-    if (!taskToUpdate) return;
-    
-    const updatedTask = { ...taskToUpdate, taskState: newStatus };
-
-    try {
-      await taskService.update(taskId, updatedTask);
-      await loadTasks();
-    } catch (error) {
-      console.error('Error updating task:', error);
-    }
-  };
-
-  const handleAssignTask = async (developerId) => {
+  const handleAssignTask = async (developerId: number) => {
     if (!selectedTask) return;
     await assignTask(selectedTask.id, developerId);
     setShowAssignTask(false);
@@ -81,7 +65,7 @@ const TaskPage = () => {
   };
 
   const filteredTasks = user?.role === 'DEVELOPER'
-    ? tasks.filter(task => task.assignedTo === user?.id)
+    ? tasks.filter((task: Task) => task.assignedTo === user?.id)
     : tasks;
 
   const tasksByStatus = {
@@ -123,7 +107,7 @@ const TaskPage = () => {
     }
   };
 
-  
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
@@ -263,7 +247,7 @@ const TaskPage = () => {
                           </button>
 
                           <button
-                            onClick={() => handleDeleteTask(task.id)} // <-- delete logic
+                            onClick={() => handleDeleteTask(task.id)}
                             className="p-1 text-red-400 hover:text-red-600 transition-colors"
                             title="Delete task"
                           >
@@ -273,25 +257,13 @@ const TaskPage = () => {
                       )}
                     </div>
 
-                    <div className="flex items-center justify-between text-xs text-slate-400 mb-4">
-                      <span className="flex items-center">
-                        <Calendar className="w-3 h-3 mr-1" />
-                        {new Date(task.createdAt).toLocaleDateString()}
-                      </span>
-                      {task.updatedAt && (
-                        <span className="text-slate-500">
-                          Updated: {new Date(task.updatedAt).toLocaleDateString()}
-                        </span>
-                      )}
-                    </div>
 
-
+                    {/* developer role section */}
                     {user?.role === 'DEVELOPER' && (
                       <div className="flex flex-wrap items-center gap-2 mt-2">
                         {['TODO', 'IN_PROGRESS', 'DONE'].map(newStatus => (
                           <button
                             key={newStatus}
-                            onClick={() => handleStatusChange(task.id, newStatus)}
                             disabled={task.taskState === newStatus}
                             className={`px-3 py-1 text-xs font-medium rounded-lg transition-all duration-200 ${task.taskState === newStatus
                               ? 'bg-white/10 text-slate-500 cursor-not-allowed border border-white/20'
@@ -301,7 +273,6 @@ const TaskPage = () => {
                             {newStatus.replace('_', ' ')}
                           </button>
                         ))}
-
                         <button
                           onClick={() => {
                             setEditableTask(task);
@@ -314,7 +285,7 @@ const TaskPage = () => {
                         </button>
                       </div>
                     )}
-
+                    {/* end developer role section */}
 
 
 

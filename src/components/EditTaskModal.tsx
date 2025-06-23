@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import type { Task } from '../types/task-type/Task';
 import { taskService } from '../services/task/taskService';
-
+import { useAuth } from '../context/useAuth';
 
 interface EditTaskModalProps {
     task: Task;
@@ -12,7 +12,7 @@ interface EditTaskModalProps {
 
 const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, onClose, onSave }) => {
     const [editedTask, setEditedTask] = useState<Task>(task);
-
+    const {fetchUser} = useAuth();
     useEffect(() => {
         setEditedTask(task);
     }, [task]);
@@ -20,6 +20,7 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, onClose, onSave }) 
     const handleSave = async () => {
         try {
             await taskService.update(editedTask.id, editedTask);
+            await fetchUser();
             onSave();
         } catch (error) {
             console.error('Failed to update task', error);
@@ -47,11 +48,18 @@ const EditTaskModal: React.FC<EditTaskModalProps> = ({ task, onClose, onSave }) 
                     <select
                         value={editedTask.taskState}
                         onChange={(e) => setEditedTask({ ...editedTask, taskState: e.target.value })}
-                        className="w-full p-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                        className="w-full p-2 rounded-lg bg-white/5 border border-white/10 text-white focus:outline-none focus:ring-2 focus:ring-purple-500 appearance-none cursor-pointer"
+                        style={{
+                            backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                            backgroundPosition: 'right 0.5rem center',
+                            backgroundRepeat: 'no-repeat',
+                            backgroundSize: '1.5em 1.5em',
+                            paddingRight: '2.5rem'
+                        }}
                     >
-                        <option value="TODO">TODO</option>
-                        <option value="IN_PROGRESS">IN PROGRESS</option>
-                        <option value="DONE">DONE</option>
+                        <option value="TODO" className="bg-slate-800 text-white">TODO</option>
+                        <option value="IN_PROGRESS" className="bg-slate-800 text-white">IN PROGRESS</option>
+                        <option value="DONE" className="bg-slate-800 text-white">DONE</option>
                     </select>
                 </div>
 
