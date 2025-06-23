@@ -1,5 +1,5 @@
 import type { Developer } from "./developer-type/Developer";
-import type { User } from "./task-type/User";
+import type { User } from "./User";
 
 
 export interface Manager  extends User {

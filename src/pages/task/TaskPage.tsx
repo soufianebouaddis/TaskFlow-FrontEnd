@@ -382,7 +382,6 @@ const TaskPage = () => {
             setShowAssignTask(false);
             setSelectedTask(null);
           }}
-          isLoading={isLoading}
         />
       )}
 

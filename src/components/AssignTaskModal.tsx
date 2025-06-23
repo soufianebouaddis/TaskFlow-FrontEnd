@@ -20,7 +20,6 @@ interface AssignTaskModalProps {
   developers: Developer[];
   onAssign: (developerId: string) => void;
   onClose: () => void;
-  isLoading: boolean;
 }
 
 const AssignTaskModal: React.FC<AssignTaskModalProps> = ({
@@ -28,7 +27,6 @@ const AssignTaskModal: React.FC<AssignTaskModalProps> = ({
   developers,
   onAssign,
   onClose,
-  isLoading,
 }) => {
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm overflow-y-auto h-full w-full z-50 flex items-center justify-center p-4">

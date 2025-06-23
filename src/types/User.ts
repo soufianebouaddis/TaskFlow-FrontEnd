@@ -1,5 +1,3 @@
-import type { Role } from "../Role";
-
 export interface User{
     id: string;
     firstName: string;
@@ -8,5 +6,5 @@ export interface User{
     password: string;
     createdAt: Date;
     updatedAt: Date;
-    role: Role;
+    role: string;
 }

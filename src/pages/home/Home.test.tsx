@@ -1,14 +1,11 @@
-import React from 'react';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, screen, fireEvent, act } from '@testing-library/react';
 import '@testing-library/jest-dom';
 import Home from './Home';
-
 
 interface MockLocation {
   href: string;
   assign: jest.MockedFunction<(url: string) => void>;
 }
-
 
 const mockLocationAssign = jest.fn() as jest.MockedFunction<(url: string) => void>;
 delete (window as any).location;
@@ -17,9 +14,7 @@ delete (window as any).location;
   assign: mockLocationAssign 
 } as MockLocation;
 
-
 jest.useFakeTimers();
-
 
 const mockSetInterval = jest.spyOn(global, 'setInterval');
 const mockClearInterval = jest.spyOn(global, 'clearInterval');
@@ -27,7 +22,7 @@ const mockClearInterval = jest.spyOn(global, 'clearInterval');
 describe('Home Component', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    (window.location as MockLocation).href = '';
+    (window.location as unknown as MockLocation).href = '';
   });
 
   afterEach(() => {
@@ -110,7 +105,7 @@ describe('Home Component', () => {
       const signInButton = screen.getAllByText('Sign In')[0]; 
       fireEvent.click(signInButton);
       
-      expect((window.location as MockLocation).href).toBe('/login');
+      expect((window.location as unknown as MockLocation).href).toBe('/login');
     });
 
     test('navigates to login when "Already have an account" link is clicked', () => {
@@ -119,7 +114,7 @@ describe('Home Component', () => {
       const signInLink = screen.getByText(/Already have an account\? Sign in/);
       fireEvent.click(signInLink);
       
-      expect((window.location as MockLocation).href).toBe('/login');
+      expect((window.location as unknown as MockLocation).href).toBe('/login');
     });
 
     test('navigates to register when "Get Started Free" button is clicked', () => {
@@ -128,7 +123,7 @@ describe('Home Component', () => {
       const getStartedButtons = screen.getAllByText('Get Started Free');
       fireEvent.click(getStartedButtons[0]);
       
-      expect((window.location as MockLocation).href).toBe('/register');
+      expect((window.location as unknown as MockLocation).href).toBe('/register');
     });
 
     test('navigates to register when "Start Your Journey" button is clicked', () => {
@@ -137,7 +132,7 @@ describe('Home Component', () => {
       const startJourneyButton = screen.getByText('Start Your Journey');
       fireEvent.click(startJourneyButton);
       
-      expect((window.location as MockLocation).href).toBe('/register');
+      expect((window.location as unknown as MockLocation).href).toBe('/register');
     });
 
     test('handles Watch Demo button click', () => {
@@ -146,7 +141,7 @@ describe('Home Component', () => {
       const watchDemoButton = screen.getByText('Watch Demo');
       fireEvent.click(watchDemoButton);
       
-      expect((window.location as MockLocation).href).toBe('/login');
+      expect((window.location as unknown as MockLocation).href).toBe('/login');
     });
   });
 
