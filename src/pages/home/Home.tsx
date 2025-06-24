@@ -1,7 +1,11 @@
 import { useState, useEffect } from 'react';
 import { ArrowRight, CheckCircle, Zap, Shield, Users, Sparkles, Play } from 'lucide-react';
 
-const Home = () => {
+export type HomeProps = {
+  navigate?: (url: string) => void;
+};
+
+const Home = ({ navigate = (url) => window.location.assign(url) }: HomeProps) => {
   const [isVisible, setIsVisible] = useState(false);
   const [currentFeature, setCurrentFeature] = useState(0);
 
@@ -39,12 +43,11 @@ const Home = () => {
   ];
 
   const handleLogin = () => {
-    // In a real app, you'd use React Router
-    window.location.href = '/login';
+    navigate('/login');
   };
 
   const handleGetStarted = () => {
-    window.location.href = '/register';
+    navigate('/register');
   };
 
   return (
