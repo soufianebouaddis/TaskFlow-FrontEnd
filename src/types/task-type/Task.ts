@@ -38,3 +38,7 @@ export interface TaskRequest {
     taskState: string;
 }
 
+
+export interface ExtendedTask extends Task {
+    assignedTo?: string;
+  }

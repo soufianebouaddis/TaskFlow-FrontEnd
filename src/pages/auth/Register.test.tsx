@@ -86,7 +86,7 @@ describe('Register Component', () => {
       
       expect(screen.getByText('Frontend Developer')).toBeInTheDocument();
       expect(screen.getByText('Backend Developer')).toBeInTheDocument();
-      expect(screen.getByText('Tester')).toBeInTheDocument();
+      expect(screen.getByText('FullStack Developer')).toBeInTheDocument();
     });
 
     test('renders sign in link', () => {

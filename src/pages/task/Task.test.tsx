@@ -8,7 +8,6 @@ import authService from '../../services/auth/authService';
 import { taskService } from '../../services/task/taskService';
 import TaskPage from './TaskPage';
 
-// Mock the dependencies
 jest.mock('../../context/useAuth');
 jest.mock('../../context/useTask');
 jest.mock('../../services/auth/authService');
@@ -54,7 +53,7 @@ jest.mock('../../components/Profile', () => {
   };
 });
 
-// Mock Header component since it's not imported
+
 jest.mock('../../components/Header', () => {
   return function MockHeader({ user, onOpenProfile, onLogout }: any) {
     return (
@@ -205,17 +204,17 @@ describe('TaskPage', () => {
     it('renders manager dashboard with stats cards', () => {
       render(<TaskPage />);
 
-      // Check if stats cards are rendered
+      
       expect(screen.getByText('Developers')).toBeInTheDocument();
       expect(screen.getByText('To Do')).toBeInTheDocument();
       expect(screen.getByText('In Progress')).toBeInTheDocument();
       expect(screen.getByText('Completed')).toBeInTheDocument();
 
-      // Check stats values
-      expect(screen.getByTestId('developers-count')).toHaveTextContent('2'); // Developers count
-      expect(screen.getByTestId('todo-count')).toHaveTextContent('1'); // TODO tasks count
-      expect(screen.getByTestId('inprogress-count')).toHaveTextContent('1'); // IN_PROGRESS tasks count
-      expect(screen.getByTestId('done-count')).toHaveTextContent('1'); // DONE tasks count
+
+      expect(screen.getByTestId('developers-count')).toHaveTextContent('2');
+      expect(screen.getByTestId('todo-count')).toHaveTextContent('1'); 
+      expect(screen.getByTestId('inprogress-count')).toHaveTextContent('1'); 
+      expect(screen.getByTestId('done-count')).toHaveTextContent('1'); 
     });
 
     it('displays team members section for manager', () => {
@@ -248,11 +247,11 @@ describe('TaskPage', () => {
     it('displays assign and delete buttons for tasks when manager', () => {
       render(<TaskPage />);
 
-      // Should show assign buttons (UserPlus icons)
+
       const assignButtons = screen.getAllByTitle('Assign task');
       expect(assignButtons).toHaveLength(mockTasks.length);
 
-      // Should show delete buttons (Trash icons)
+
       const deleteButtons = screen.getAllByTitle('Delete task');
       expect(deleteButtons).toHaveLength(mockTasks.length);
     });
@@ -302,8 +301,8 @@ describe('TaskPage', () => {
     it('shows status change buttons for developer', () => {
       render(<TaskPage />);
 
-      // Should show status buttons for developer tasks
-      expect(screen.getAllByRole('button', { name: 'TODO' })).toHaveLength(2); // Two TODO buttons
+    
+      expect(screen.getAllByRole('button', { name: 'TODO' })).toHaveLength(2);
       expect(screen.getAllByRole('button', { name: 'IN PROGRESS' })).toHaveLength(2);
       expect(screen.getAllByRole('button', { name: 'DONE' })).toHaveLength(2);
     });
@@ -312,7 +311,7 @@ describe('TaskPage', () => {
       render(<TaskPage />);
 
       const editButtons = screen.getAllByTitle('Edit task');
-      expect(editButtons).toHaveLength(2); // Two tasks for the developer
+      expect(editButtons).toHaveLength(2); 
     });
 
     it('opens edit task modal when edit button is clicked', async () => {
@@ -337,12 +336,12 @@ describe('TaskPage', () => {
     it('organizes tasks by status correctly', () => {
       render(<TaskPage />);
 
-      // Check column headers
+      
       expect(screen.getByText('TODO')).toBeInTheDocument();
       expect(screen.getByText('IN PROGRESS')).toBeInTheDocument();
       expect(screen.getByText('DONE')).toBeInTheDocument();
 
-      // Check task counts in column headers
+      
       expect(screen.getByTestId('todo-count')).toHaveTextContent('1');
       expect(screen.getByTestId('inprogress-count')).toHaveTextContent('1');
       expect(screen.getByTestId('done-count')).toHaveTextContent('1');
@@ -444,8 +443,6 @@ describe('TaskPage', () => {
 
       // Open add task modal
       fireEvent.click(screen.getByText('Add New Task'));
-
-      // Loading overlay should not be shown when modal is open
       expect(screen.queryByText('Loading...')).not.toBeInTheDocument();
     });
   });
@@ -468,12 +465,6 @@ describe('TaskPage', () => {
   });
 
   describe('useEffect Hook', () => {
-    // Removed: 'calls loadTasks when user is available' test because loadTasks is now called by the context, not by TaskPage.
-    // it('calls loadTasks when user is available', () => {
-    //   render(<TaskPage />);
-    //   expect(mockTaskContextValue.loadTasks).toHaveBeenCalled();
-    // });
-
     it('does not call loadTasks when user is null', () => {
       mockUseAuth.mockReturnValue({
         user: null,

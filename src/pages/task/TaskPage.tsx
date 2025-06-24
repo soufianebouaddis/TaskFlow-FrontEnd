@@ -3,7 +3,6 @@ import { useState, useMemo } from 'react';
 import { UserPlus, Trash, AlertCircle, Clock, CheckCircle, Plus, Users, Mail, Code, Pencil } from 'lucide-react';
 import { useAuth } from '../../context/useAuth';
 import { useTaskContext } from '../../context/useTask';
-import type { Task } from '../../types/task-type/Task';
 import authService from '../../services/auth/authService';
 import { taskService } from '../../services/task/taskService';
 import EditTaskModal from '../../components/EditTaskModal';
@@ -13,33 +12,10 @@ import AddDeveloperToTeamModal from '../../components/AddDeveloperToTeamModal';
 import ProfileModal from '../../components/Profile';
 import Header from '../../components/Header';
 import toast from 'react-hot-toast';
+import type { ExtendedTask } from '../../types/task-type/Task';
+import type { ExtendedUser } from '../../types/User';
 
-// Extended User interface to include developerDetails
-interface ExtendedUser {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string;
-  password: string;
-  createdAt: Date;
-  updatedAt: Date;
-  role: string;
-  developerDetails?: {
-    team?: Array<{
-      id: string;
-      firstName: string;
-      lastName: string;
-      email: string;
-      developerType: string;
-    }>;
-    tasks?: Task[];
-  };
-}
 
-// Extended Task interface to include assignedTo
-interface ExtendedTask extends Task {
-  assignedTo?: string;
-}
 
 const TaskPage = () => {
   const { user, fetchUser, logout } = useAuth();
