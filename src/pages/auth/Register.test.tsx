@@ -1,6 +1,7 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import type { ReactElement } from 'react';
+import toast from 'react-hot-toast';
 
 import authService from '../../services/auth/authService';
 import Register from './RegisterPage';
@@ -17,7 +18,10 @@ jest.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate
 }));
 
-global.alert = jest.fn();
+jest.mock('react-hot-toast', () => ({
+  error: jest.fn(),
+  success: jest.fn(),
+}));
 
 const renderWithRouter = (component: ReactElement) => {
   return render(
@@ -86,7 +90,7 @@ describe('Register Component', () => {
       
       expect(screen.getByText('Frontend Developer')).toBeInTheDocument();
       expect(screen.getByText('Backend Developer')).toBeInTheDocument();
-      expect(screen.getByText('FullStack Developer')).toBeInTheDocument();
+      expect(screen.getByText('Full Stack Developer')).toBeInTheDocument();
     });
 
     test('renders sign in link', () => {
@@ -192,7 +196,7 @@ describe('Register Component', () => {
       const submitButton = screen.getByRole('button', { name: /create account/i });
       fireEvent.click(submitButton);
       
-      expect(global.alert).toHaveBeenCalledWith('Passwords do not match');
+      expect(toast.error).toHaveBeenCalledWith('Passwords do not match');
     });
 
     test('shows error when no role is selected', () => {
@@ -203,7 +207,7 @@ describe('Register Component', () => {
       const submitButton = screen.getByRole('button', { name: /create account/i });
       fireEvent.click(submitButton);
       
-      expect(global.alert).toHaveBeenCalledWith('Please select a role');
+      expect(toast.error).toHaveBeenCalledWith('Please select a role');
     });
 
     test('shows error when developer is selected but no developer type', () => {
@@ -215,7 +219,7 @@ describe('Register Component', () => {
       const submitButton = screen.getByRole('button', { name: /create account/i });
       fireEvent.click(submitButton);
       
-      expect(global.alert).toHaveBeenCalledWith('Please select developer type');
+      expect(toast.error).toHaveBeenCalledWith('Please select developer type');
     });
   });
 
@@ -307,7 +311,7 @@ describe('Register Component', () => {
       fireEvent.click(submitButton);
       
       await waitFor(() => {
-        expect(global.alert).toHaveBeenCalledWith('Registration failed');
+        expect(toast.error).toHaveBeenCalledWith('Registration failed');
       });
       
       expect(mockNavigate).not.toHaveBeenCalled();

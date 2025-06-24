@@ -1,9 +1,18 @@
+jest.mock('react-hot-toast', () => ({
+  error: jest.fn(),
+  success: jest.fn(),
+}));
+
 import React from 'react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import '@testing-library/jest-dom';
 import { BrowserRouter } from 'react-router-dom';
 import Login from './LoginPage';
+import toast from 'react-hot-toast';
+import { AuthProvider } from '../../context/AuthContext';
+import authService from '../../services/auth/authService';
+import { AxiosHeaders } from 'axios';
 
 
 const mockNavigate = jest.fn();
@@ -12,16 +21,6 @@ jest.mock('react-router-dom', () => ({
   useNavigate: () => mockNavigate,
 }));
 
-
-const mockLogin = jest.fn();
-jest.mock('../../context/useAuth', () => ({
-  useAuth: () => ({
-    login: mockLogin,
-  }),
-}));
-
-
-global.alert = jest.fn();
 
 const LoginWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <BrowserRouter>{children}</BrowserRouter>
@@ -36,14 +35,15 @@ interface LoginFormData {
 describe('Login Component', () => {
   beforeEach(() => {
     jest.clearAllMocks();
-    mockLogin.mockResolvedValue({});
   });
 
   const renderLogin = () => {
     return render(
-      <LoginWrapper>
-        <Login />
-      </LoginWrapper>
+      <AuthProvider>
+        <LoginWrapper>
+          <Login />
+        </LoginWrapper>
+      </AuthProvider>
     );
   };
 
@@ -148,6 +148,13 @@ describe('Login Component', () => {
   describe('Form Submission', () => {
     test('calls login function with form data on successful submission', async () => {
       const user = userEvent.setup();
+      authService.login = jest.fn(() => Promise.resolve({
+        data: {},
+        status: 200,
+        statusText: 'OK',
+        headers: new AxiosHeaders(),
+        config: { headers: new AxiosHeaders() },
+      }));
       renderLogin();
       
       const emailInput = screen.getByLabelText('Email Address') as HTMLInputElement;
@@ -163,11 +170,18 @@ describe('Login Component', () => {
         password: 'password123'
       };
       
-      expect(mockLogin).toHaveBeenCalledWith(expectedFormData);
+      expect(authService.login).toHaveBeenCalledWith(expectedFormData);
     });
 
     test('navigates to /tasks on successful login', async () => {
       const user = userEvent.setup();
+      authService.login = jest.fn(() => Promise.resolve({
+        data: {},
+        status: 200,
+        statusText: 'OK',
+        headers: new AxiosHeaders(),
+        config: { headers: new AxiosHeaders() },
+      }));
       renderLogin();
       
       const emailInput = screen.getByLabelText('Email Address') as HTMLInputElement;
@@ -185,7 +199,13 @@ describe('Login Component', () => {
 
     test('shows loading state during submission', async () => {
       const user = userEvent.setup();
-      mockLogin.mockImplementation(() => new Promise<void>(resolve => setTimeout(resolve, 1000)));
+      authService.login = jest.fn(() => new Promise(resolve => setTimeout(() => resolve({
+        data: {},
+        status: 200,
+        statusText: 'OK',
+        headers: new AxiosHeaders(),
+        config: { headers: new AxiosHeaders() },
+      }), 1000)));
       
       renderLogin();
       
@@ -204,7 +224,13 @@ describe('Login Component', () => {
 
     test('disables submit button during loading', async () => {
       const user = userEvent.setup();
-      mockLogin.mockImplementation(() => new Promise<void>(resolve => setTimeout(resolve, 1000)));
+      authService.login = jest.fn(() => new Promise(resolve => setTimeout(() => resolve({
+        data: {},
+        status: 200,
+        statusText: 'OK',
+        headers: new AxiosHeaders(),
+        config: { headers: new AxiosHeaders() },
+      }), 1000)));
       
       renderLogin();
       
@@ -222,7 +248,7 @@ describe('Login Component', () => {
 
     test('handles login failure with alert', async () => {
       const user = userEvent.setup();
-      mockLogin.mockRejectedValue(new Error('Login failed'));
+      authService.login = jest.fn(() => Promise.reject(new Error('Login failed')));
       
       renderLogin();
       
@@ -235,13 +261,13 @@ describe('Login Component', () => {
       await user.click(submitButton);
       
       await waitFor(() => {
-        expect(global.alert).toHaveBeenCalledWith('Login failed');
+        expect(toast.error).toHaveBeenCalledWith('Login failed. Please check your credentials.');
       });
     });
 
     test('resets loading state after failed login', async () => {
       const user = userEvent.setup();
-      mockLogin.mockRejectedValue(new Error('Login failed'));
+      authService.login = jest.fn(() => Promise.reject(new Error('Login failed')));
       
       renderLogin();
       
@@ -275,7 +301,7 @@ describe('Login Component', () => {
         password: 'password123'
       };
       
-      expect(mockLogin).toHaveBeenCalledWith(expectedFormData);
+      expect(authService.login).toHaveBeenCalledWith(expectedFormData);
     });
 
     test('can submit form by pressing Enter in password field', async () => {
@@ -294,7 +320,7 @@ describe('Login Component', () => {
         password: 'password123'
       };
       
-      expect(mockLogin).toHaveBeenCalledWith(expectedFormData);
+      expect(authService.login).toHaveBeenCalledWith(expectedFormData);
     });
 
     test('handles empty form submission', async () => {
@@ -303,7 +329,7 @@ describe('Login Component', () => {
       
       const submitButton = screen.getByRole('button', { name: /sign in/i });
       await user.click(submitButton);
-      expect(mockLogin).not.toHaveBeenCalled();
+      expect(authService.login).not.toHaveBeenCalled();
     });
   });
 
@@ -425,7 +451,7 @@ describe('Login Component', () => {
         password: 'P@ssw0rd!@#$'
       };
       
-      expect(mockLogin).toHaveBeenCalledWith(expectedFormData);
+      expect(authService.login).toHaveBeenCalledWith(expectedFormData);
     });
 
     test('handles very long input values', async () => {
