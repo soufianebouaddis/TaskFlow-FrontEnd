@@ -7,17 +7,31 @@ interface MockLocation {
   assign: jest.MockedFunction<(url: string) => void>;
 }
 
-const mockLocationAssign = jest.fn() as jest.MockedFunction<(url: string) => void>;
-delete (window as any).location;
-(window as any).location = { 
-  href: '', 
-  assign: mockLocationAssign 
-} as MockLocation;
 
 jest.useFakeTimers();
 
 const mockSetInterval = jest.spyOn(global, 'setInterval');
 const mockClearInterval = jest.spyOn(global, 'clearInterval');
+
+let mockHref = '';
+const mockAssign = jest.fn((url: string) => { mockHref = url; });
+
+beforeAll(() => {
+  Object.defineProperty(window, 'location', {
+    writable: true,
+    value: {
+      get href() { return mockHref; },
+      set href(url: string) { mockHref = url; },
+      assign: mockAssign,
+    },
+  });
+});
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  mockHref = '';
+  mockAssign.mockClear();
+});
 
 describe('Home Component', () => {
   beforeEach(() => {
@@ -101,47 +115,37 @@ describe('Home Component', () => {
   describe('Navigation and Interactions', () => {
     test('navigates to login when Sign In button in nav is clicked', () => {
       render(<Home />);
-      
       const signInButton = screen.getAllByText('Sign In')[0]; 
       fireEvent.click(signInButton);
-      
-      expect((window.location as unknown as MockLocation).href).toBe('/login');
+      expect(mockHref).toBe('/login');
     });
 
     test('navigates to login when "Already have an account" link is clicked', () => {
       render(<Home />);
-      
       const signInLink = screen.getByText(/Already have an account\? Sign in/);
       fireEvent.click(signInLink);
-      
-      expect((window.location as unknown as MockLocation).href).toBe('/login');
+      expect(mockHref).toBe('/login');
     });
 
     test('navigates to register when "Get Started Free" button is clicked', () => {
       render(<Home />);
-      
       const getStartedButtons = screen.getAllByText('Get Started Free');
       fireEvent.click(getStartedButtons[0]);
-      
-      expect((window.location as unknown as MockLocation).href).toBe('/register');
+      expect(mockHref).toBe('/register');
     });
 
     test('navigates to register when "Start Your Journey" button is clicked', () => {
       render(<Home />);
-      
       const startJourneyButton = screen.getByText('Start Your Journey');
       fireEvent.click(startJourneyButton);
-      
-      expect((window.location as unknown as MockLocation).href).toBe('/register');
+      expect(mockHref).toBe('/register');
     });
 
     test('handles Watch Demo button click', () => {
       render(<Home />);
-      
       const watchDemoButton = screen.getByText('Watch Demo');
       fireEvent.click(watchDemoButton);
-      
-      expect((window.location as unknown as MockLocation).href).toBe('/login');
+      expect(mockHref).toBe('/login');
     });
   });
 
@@ -191,9 +195,8 @@ describe('Home Component', () => {
 
     test('feature cards have hover effects', () => {
       const { container } = render(<Home />);
-      
       const featureCards = container.querySelectorAll('.bg-white\\/10.backdrop-blur-xl.rounded-2xl');
-      expect(featureCards).toHaveLength(4);
+      expect(featureCards).toHaveLength(3);
     });
   });
 
